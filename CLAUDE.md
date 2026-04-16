@@ -69,9 +69,8 @@ Police : Inter via Google Fonts. Largeur max du conteneur : 768px (mobile-first)
 
 ## Notes sur la config Vite
 
-- `GEMINI_API_KEY` est injectée dans `import.meta.env` via `define` dans `vite.config.ts`
+- `GEMINI_API_KEY` est exposée via `define` dans `vite.config.ts` comme `process.env.GEMINI_API_KEY` — elle est configurée mais **pas encore utilisée** dans `App.tsx`
 - Le HMR est désactivé quand `DISABLE_HMR=true` (utilisé lors des modifications par les agents AI Studio)
-- La surveillance des fichiers est également désactivée dans ce cas pour éviter les scintillements
 
 ## Écrans / Navigation
 
