@@ -1,47 +1,47 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Ce fichier fournit des indications à Claude Code (claude.ai/code) pour travailler dans ce dépôt.
 
-## Project Overview
+## Présentation du projet
 
-**Kadja Health** is a mobile-first, frontend-only React SPA for healthcare management in the African context (Chad). It is a prototype using mock data — there is no backend, database, or authentication system.
+**Kadja Health** est une application React SPA mobile-first pour la gestion de la santé dans le contexte africain (Tchad). C'est un prototype utilisant des données fictives — il n'y a ni backend, ni base de données, ni système d'authentification.
 
-The app is deployed via **Google AI Studio** (`metadata.json` references it). The `GEMINI_API_KEY` is injected at runtime by AI Studio; locally, set it in `.env.local`.
+L'application est déployée via **Google AI Studio** (`metadata.json` y fait référence). La `GEMINI_API_KEY` est injectée au moment de l'exécution par AI Studio ; en local, il faut la définir dans `.env.local`.
 
-## Commands
+## Commandes
 
 ```bash
-npm install          # Install dependencies
-npm run dev          # Start dev server at http://localhost:3000
-npm run build        # Production build (Vite)
-npm run preview      # Preview production build
-npm run lint         # TypeScript type checking only (tsc --noEmit)
-npm run clean        # Remove dist/
+npm install          # Installer les dépendances
+npm run dev          # Démarrer le serveur de développement sur http://localhost:3000
+npm run build        # Build de production (Vite)
+npm run preview      # Prévisualiser le build de production
+npm run lint         # Vérification TypeScript uniquement (tsc --noEmit)
+npm run clean        # Supprimer le dossier dist/
 ```
 
-There is no test suite configured.
+Aucune suite de tests n'est configurée.
 
 ## Architecture
 
-### Single-File Frontend
+### Frontend en fichier unique
 
-All UI lives in **`src/App.tsx`** (~3,300 lines). This is intentional for the prototype phase — every screen, component, interface, and mock dataset is defined here. There is no component folder structure.
+Toute l'interface est dans **`src/App.tsx`** (~3 300 lignes). C'est intentionnel pour la phase prototype — chaque écran, composant, interface et jeu de données fictif y est défini. Il n'existe pas de structure de dossiers pour les composants.
 
-`src/main.tsx` renders `<App />` into `#root`. `src/index.css` imports Tailwind and defines CSS custom properties for the theme.
+`src/main.tsx` monte `<App />` dans `#root`. `src/index.css` importe Tailwind et définit les variables CSS du thème.
 
-### State Management
+### Gestion de l'état
 
-All state is managed with `useState` in the top-level `App` component — no Context, reducers, or external state libraries. Screen routing is handled by a `currentScreen` state variable of type `Screen` (a union of string literals). Navigation updates this value; the render section conditionally returns the matching screen component.
+Tout l'état est géré avec `useState` dans le composant racine `App` — pas de Context, reducers ni bibliothèque externe. Le routage entre écrans est assuré par une variable `currentScreen` de type `Screen` (union de littéraux de chaîne). La navigation met à jour cette valeur ; le rendu retourne conditionnellement le composant correspondant.
 
-### Data Layer
+### Couche de données
 
-All data is mock/in-memory. Key mock arrays: `MOCK_DOCTORS` and `MOCK_PATIENTS`. There is no persistence — state resets on page refresh. The `@google/genai` and `express` packages are listed as dependencies but are not currently used in the codebase.
+Toutes les données sont fictives et en mémoire. Tableaux principaux : `MOCK_DOCTORS` et `MOCK_PATIENTS`. Il n'y a aucune persistance — l'état est réinitialisé à chaque rechargement de page. Les packages `@google/genai` et `express` sont listés en dépendances mais ne sont pas utilisés dans le code actuel.
 
-### External Integration
+### Intégration externe
 
-The **SIS screen** embeds an external government dashboard via iframe: `https://sis.sante.gouv.td/sisr/dhis-web-dashboard/`.
+L'écran **SIS** intègre un tableau de bord gouvernemental externe via iframe : `https://sis.sante.gouv.td/sisr/dhis-web-dashboard/`.
 
-## Key Types
+## Types principaux
 
 ```typescript
 type Screen = 'Accueil' | 'SSR' | 'Soins' | 'Données' | 'ZLECAf' | 'SIS' |
@@ -54,27 +54,27 @@ interface Doctor  { id, name, specialty, location, experience, patientsCount, ra
 interface Consultation { date, reason, doctor, notes, type, reminderDate, reminderTime, medicationReminders }
 ```
 
-## Styling
+## Styles
 
-Tailwind CSS v4 (via `@tailwindcss/vite`). Custom theme tokens are defined as CSS variables in `src/index.css`:
+Tailwind CSS v4 (via `@tailwindcss/vite`). Les tokens du thème sont définis comme variables CSS dans `src/index.css` :
 
-| Token | Value | Use |
+| Token | Valeur | Usage |
 |---|---|---|
-| `--color-sleek-bg` | `#f0f2f5` | Page background |
-| `--color-sleek-sidebar` | `#1e293b` | Dark surfaces |
-| `--color-sleek-accent` | `#3b82f6` | Primary blue |
-| `--color-sleek-status` | `#10b981` | Success/active green |
+| `--color-sleek-bg` | `#f0f2f5` | Fond de page |
+| `--color-sleek-sidebar` | `#1e293b` | Surfaces sombres |
+| `--color-sleek-accent` | `#3b82f6` | Bleu principal |
+| `--color-sleek-status` | `#10b981` | Vert succès/actif |
 
-Font: Inter via Google Fonts. Max container width: 768px (mobile-first).
+Police : Inter via Google Fonts. Largeur max du conteneur : 768px (mobile-first).
 
-## Vite Config Notes
+## Notes sur la config Vite
 
-- `GEMINI_API_KEY` is injected into `import.meta.env` via `define` in `vite.config.ts`
-- HMR is disabled when `DISABLE_HMR=true` (used by AI Studio agent edits)
-- File watching is disabled in the same condition to prevent flickering
+- `GEMINI_API_KEY` est injectée dans `import.meta.env` via `define` dans `vite.config.ts`
+- Le HMR est désactivé quand `DISABLE_HMR=true` (utilisé lors des modifications par les agents AI Studio)
+- La surveillance des fichiers est également désactivée dans ce cas pour éviter les scintillements
 
-## Screens / Navigation
+## Écrans / Navigation
 
-Six bottom-nav tabs: **Accueil** (home/dashboard), **Assurance** (insurance), **SSR** (sexual & reproductive health), **Soins** (medical services), **Données** (data — placeholder), **SIS** (external iframe).
+Six onglets en bas : **Accueil** (tableau de bord), **Assurance**, **SSR** (santé sexuelle & reproductive), **Soins** (services médicaux), **Données** (placeholder), **SIS** (iframe externe).
 
-Additional screens pushed via `setCurrentScreen`: `PatientDetail`, `AddPatient`, `DoctorProfile`, `StaffRegistration`, `Telemedicine`, `Vaccination`, `Profile`.
+Écrans supplémentaires accessibles via `setCurrentScreen` : `PatientDetail`, `AddPatient`, `DoctorProfile`, `StaffRegistration`, `Telemedicine`, `Vaccination`, `Profile`.
