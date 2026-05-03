@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The State of AI Process Automation 2025</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090F;
+  --surface:#0E1117;
+  --surface2:#161B27;
+  --border:rgba(255,255,255,0.07);
+  --accent:#6C63FF;
+  --accent2:#00D4AA;
+  --accent3:#FF6B6B;
+  --accent4:#FFB020;
+  --text:#F0F2FF;
+  --muted:#7B8094;
+  --font:'Inter',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:var(--font)}
+
+/* ── Deck shell ── */
+#deck{width:100vw;height:100vh;position:relative}
+.slide{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  background:var(--bg);
+  opacity:0;pointer-events:none;
+  transition:opacity .5s ease,transform .5s ease;
+  transform:translateY(20px);
+  overflow:hidden;
+}
+.slide.active{opacity:1;pointer-events:all;transform:translateY(0)}
+
+/* ── Global noise texture overlay ── */
+.slide::before{
+  content:'';position:absolute;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:.4;
+}
+
+/* ── Progress bar ── */
+#progress{
+  position:fixed;top:0;left:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transition:width .4s ease;z-index:999;
+}
+
+/* ── Slide counter ── */
+#counter{
+  position:fixed;bottom:28px;right:36px;
+  font-size:.72rem;font-weight:600;letter-spacing:.1em;
+  color:var(--muted);z-index:999;font-family:var(--mono);
+}
+
+/* ── Nav arrows ── */
+.nav-btn{
+  position:fixed;bottom:20px;z-index:999;
+  background:rgba(255,255,255,.06);border:1px solid var(--border);
+  color:var(--text);font-size:1.1rem;width:44px;height:44px;
+  border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .2s,transform .2s;backdrop-filter:blur(8px);
+}
+.nav-btn:hover{background:rgba(108,99,255,.25);transform:scale(1.05)}
+#btn-prev{left:calc(50% - 56px)}
+#btn-next{left:calc(50% + 12px)}
+
+/* ── Shared layout helpers ── */
+.slide-inner{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;padding:52px 72px 36px}
+.tag{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(108,99,255,.12);border:1px solid rgba(108,99,255,.3);
+  color:var(--accent);font-size:.7rem;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;padding:5px 14px;border-radius:999px;margin-bottom:20px;width:fit-content;
+}
+.slide-title{font-size:clamp(1.6rem,3.5vw,2.8rem);font-weight:800;letter-spacing:-.04em;line-height:1.1;margin-bottom:12px}
+.slide-sub{font-size:.95rem;color:var(--muted);margin-bottom:32px;line-height:1.7;max-width:640px}
+.grad{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.source-link{
+  display:inline-flex;align-items:center;gap:6px;margin-top:auto;padding-top:20px;
+  font-size:.7rem;color:var(--muted);font-family:var(--mono);
+  border-top:1px solid var(--border);text-decoration:none;
+  transition:color .2s;width:100%;
+}
+.source-link:hover{color:var(--accent2)}
+.source-link span{color:var(--accent2)}
+
+/* ── Grid layouts ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+
+/* ── Cards ── */
+.card{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:16px;padding:24px;
+  transition:border-color .25s,transform .25s;
+}
+.card:hover{border-color:rgba(108,99,255,.4);transform:translateY(-2px)}
+.card-icon{font-size:1.6rem;margin-bottom:12px}
+.card-val{font-size:2rem;font-weight:800;letter-spacing:-.04em;margin-bottom:4px}
+.card-label{font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.card-desc{font-size:.8rem;color:var(--muted);margin-top:10px;line-height:1.6}
+
+/* ═══════════════════════════════════════
+   SLIDE 1 — TITLE
+═══════════════════════════════════════ */
+#s1{background:var(--bg)}
+#s1 .bg-glow{
+  position:absolute;width:800px;height:800px;
+  background:radial-gradient(circle,rgba(108,99,255,.18) 0%,transparent 65%);
+  top:-200px;right:-200px;pointer-events:none;
+}
+#s1 .bg-glow2{
+  position:absolute;width:500px;height:500px;
+  background:radial-gradient(circle,rgba(0,212,170,.1) 0%,transparent 65%);
+  bottom:-150px;left:-100px;pointer-events:none;
+}
+#s1 .grid-lines{
+  position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:64px 64px;
+}
+.title-eyebrow{display:flex;align-items:center;gap:16px;margin-bottom:32px}
+.eyebrow-line{width:48px;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px}
+.eyebrow-text{font-family:var(--mono);font-size:.75rem;color:var(--accent2);letter-spacing:.15em;text-transform:uppercase}
+.main-title{font-size:clamp(2.5rem,6vw,5rem);font-weight:900;letter-spacing:-.05em;line-height:1.02;margin-bottom:28px}
+.main-sub{font-size:1.05rem;color:var(--muted);max-width:520px;line-height:1.8;margin-bottom:48px}
+.presenter-row{display:flex;align-items:center;gap:20px}
+.presenter-avatar{
+  width:52px;height:52px;border-radius:14px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;color:#fff;
+}
+.presenter-name{font-weight:700;font-size:.95rem}
+.presenter-role{font-size:.78rem;color:var(--muted);margin-top:2px}
+.title-pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:40px}
+.pill{
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--muted);font-size:.72rem;font-weight:600;
+  padding:6px 16px;border-radius:999px;letter-spacing:.04em;
+}
+
+/* ═══════════════════════════════════════
+   SLIDE 2 — MARKET SIZE
+═══════════════════════════════════════ */
+.bar-chart{display:flex;flex-direction:column;gap:12px;flex:1}
+.bar-row{display:flex;align-items:center;gap:16px}
+.bar-label{font-size:.78rem;font-weight:600;color:var(--muted);min-width:44px;text-align:right;font-family:var(--mono)}
+.bar-track{flex:1;height:36px;background:var(--surface2);border-radius:8px;overflow:hidden;position:relative;border:1px solid var(--border)}
+.bar-fill{height:100%;border-radius:8px;display:flex;align-items:center;padding-left:14px;font-size:.75rem;font-weight:700;color:#fff;position:relative}
+.bar-val{position:absolute;right:14px;font-family:var(--mono);font-size:.72rem;font-weight:700;color:rgba(255,255,255,.7)}
+
+/* ═══════════════════════════════════════
+   SLIDE 3 — KEY STATS
+═══════════════════════════════════════ */
+.stat-big{font-size:clamp(2rem,5vw,3.5rem);font-weight:900;letter-spacing:-.05em}
+
+/* ═══════════════════════════════════════
+   SLIDE 4 — PIE CHART
+═══════════════════════════════════════ */
+.pie-layout{display:flex;align-items:center;gap:56px;flex:1}
+.pie-svg{flex-shrink:0}
+.pie-legend{display:flex;flex-direction:column;gap:16px;flex:1}
+.legend-item{display:flex;align-items:center;gap:14px}
+.legend-dot{width:14px;height:14px;border-radius:4px;flex-shrink:0}
+.legend-label{font-size:.85rem;font-weight:600}
+.legend-pct{font-family:var(--mono);font-size:.8rem;color:var(--muted);margin-left:auto}
+
+/* ═══════════════════════════════════════
+   SLIDE 5 — TOOLS LANDSCAPE
+═══════════════════════════════════════ */
+.tool-card{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:14px;padding:18px 20px;
+  display:flex;flex-direction:column;gap:8px;
+  transition:border-color .2s,transform .2s;
+}
+.tool-card:hover{border-color:rgba(108,99,255,.5);transform:translateY(-3px)}
+.tool-name{font-weight:700;font-size:.9rem}
+.tool-cat{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.tool-bar-bg{height:4px;background:var(--surface);border-radius:999px;margin-top:4px}
+.tool-bar-fg{height:4px;border-radius:999px}
+
+/* ═══════════════════════════════════════
+   SLIDE 6 — ROI DATA
+═══════════════════════════════════════ */
+.roi-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.roi-table th{
+  text-align:left;padding:10px 16px;
+  font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);border-bottom:1px solid var(--border);
+}
+.roi-table td{padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+.roi-table tr:last-child td{border-bottom:none}
+.roi-table tr:hover td{background:rgba(255,255,255,.02)}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.68rem;font-weight:700}
+.badge-green{background:rgba(0,212,170,.12);color:var(--accent2);border:1px solid rgba(0,212,170,.25)}
+.badge-purple{background:rgba(108,99,255,.12);color:var(--accent);border:1px solid rgba(108,99,255,.25)}
+.badge-yellow{background:rgba(255,176,32,.12);color:var(--accent4);border:1px solid rgba(255,176,32,.25)}
+
+/* ═══════════════════════════════════════
+   SLIDE 7 — ROADMAP
+═══════════════════════════════════════ */
+.timeline{display:flex;flex-direction:column;gap:0;flex:1}
+.tl-item{display:flex;gap:28px;position:relative}
+.tl-left{display:flex;flex-direction:column;align-items:center;width:52px;flex-shrink:0}
+.tl-dot{
+  width:40px;height:40px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;flex-shrink:0;border:1px solid var(--border);
+}
+.tl-line{flex:1;width:2px;background:var(--border);margin:4px 0}
+.tl-item:last-child .tl-line{display:none}
+.tl-content{padding:4px 0 28px}
+.tl-year{font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-bottom:4px;font-weight:600}
+.tl-title{font-weight:700;font-size:.95rem;margin-bottom:4px}
+.tl-desc{font-size:.78rem;color:var(--muted);line-height:1.6}
+
+/* ═══════════════════════════════════════
+   SLIDE 8 — CLOSING
+═══════════════════════════════════════ */
+#s8{background:var(--bg)}
+#s8 .bg-glow{
+  position:absolute;width:900px;height:900px;
+  background:radial-gradient(circle,rgba(0,212,170,.12) 0%,transparent 60%);
+  top:-300px;left:50%;transform:translateX(-50%);
+}
+.closing-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:0;position:relative;z-index:1}
+.closing-icon{font-size:3rem;margin-bottom:28px}
+.closing-title{font-size:clamp(2rem,5vw,3.8rem);font-weight:900;letter-spacing:-.05em;line-height:1.08;margin-bottom:20px}
+.closing-sub{font-size:1rem;color:var(--muted);max-width:480px;line-height:1.8;margin-bottom:40px}
+.closing-links{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.closing-btn{
+  padding:14px 28px;border-radius:12px;font-weight:700;font-size:.88rem;
+  cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;
+  transition:transform .2s,box-shadow .2s;
+}
+.btn-filled{background:linear-gradient(135deg,var(--accent),#8B5CF6);color:#fff;border:none;box-shadow:0 8px 32px rgba(108,99,255,.3)}
+.btn-filled:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(108,99,255,.45)}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-outline:hover{background:var(--surface2);transform:translateY(-3px)}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div id="counter">1 / 8</div>
+<button class="nav-btn" id="btn-prev">←</button>
+<button class="nav-btn" id="btn-next">→</button>
+
+<div id="deck">
+
+<!-- ═══ SLIDE 1 — TITLE ═══ -->
+<div class="slide active" id="s1">
+  <div class="grid-lines"></div>
+  <div class="bg-glow"></div>
+  <div class="bg-glow2"></div>
+  <div class="slide-inner" style="justify-content:center">
+    <div class="title-eyebrow">
+      <div class="eyebrow-line"></div>
+      <div class="eyebrow-text">Industry Intelligence Report · 2025</div>
+    </div>
+    <h1 class="main-title">The State of<br/><span class="grad">AI Process Automation</span><br/>in 2025</h1>
+    <p class="main-sub">A data-driven look at how RPA, Agentic AI, and RAG systems are reshaping enterprise operations — with verified market data and ROI benchmarks.</p>
+    <div class="presenter-row">
+      <div class="presenter-avatar">AI</div>
+      <div>
+        <div class="presenter-name">[Your Name]</div>
+        <div class="presenter-role">RPA &amp; Agentic AI Process Developer</div>
+      </div>
+    </div>
+    <div class="title-pills">
+      <div class="pill">🤖 Agentic AI</div>
+      <div class="pill">⚙️ RPA</div>
+      <div class="pill">📚 RAG Systems</div>
+      <div class="pill">📊 Market Data 2025</div>
+      <div class="pill">💡 Enterprise ROI</div>
+    </div>
+  </div>
+  <a href="https://www.grandviewresearch.com/industry-analysis/robotic-process-automation-rpa-market" target="_blank" class="source-link" style="padding:16px 72px;z-index:1">
+    ↗ <span>Source:</span> Grand View Research — RPA Market Analysis 2025
+  </a>
+</div>
+
+<!-- ═══ SLIDE 2 — MARKET GROWTH ═══ -->
+<div class="slide" id="s2">
+  <div class="slide-inner">
+    <div class="tag">📈 Market Size</div>
+    <h2 class="slide-title">RPA Market: From <span class="grad">$3.6B → $66B</span> by 2032</h2>
+    <p class="slide-sub">Compound annual growth of 38.2% driven by enterprise digital transformation and AI integration.</p>
+    <div class="bar-chart">
+      <div class="bar-row">
+        <span class="bar-label">2021</span>
+        <div class="bar-track"><div class="bar-fill" style="width:8%;background:linear-gradient(90deg,#6C63FF,#8B5CF6)">$2.3B<div class="bar-val"></div></div></div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">2022</span>
+        <div class="bar-track"><div class="bar-fill" style="width:13%;background:linear-gradient(90deg,#6C63FF,#8B5CF6)">$3.0B</div></div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">2023</span>
+        <div class="bar-track"><div class="bar-fill" style="width:18%;background:linear-gradient(90deg,#6C63FF,#8B5CF6)">$5.1B</div></div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">2024</span>
+        <div class="bar-track"><div class="bar-fill" style="width:26%;background:linear-gradient(90deg,#6C63FF,#00D4AA)">$7.6B</div></div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">2025</span>
+        <div class="bar-track"><div class="bar-fill" style="width:37%;background:linear-gradient(90deg,#00D4AA,#6C63FF)">$11.2B<span style="margin-left:8px;background:rgba(0,212,170,.2);padding:1px 8px;border-radius:6px;font-size:.65rem">▲ 47%</span></div></div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label" style="color:#FFB020">2028E</span>
+        <div class="bar-track"><div class="bar-fill" style="width:65%;background:linear-gradient(90deg,#FFB020,#FF6B6B)">$30B (est.)</div></div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label" style="color:#FF6B6B">2032E</span>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:linear-gradient(90deg,#FF6B6B,#6C63FF)">$66B (est.)</div></div>
+      </div>
+    </div>
+  </div>
+  <a href="https://www.grandviewresearch.com/industry-analysis/robotic-process-automation-rpa-market" target="_blank" class="source-link" style="padding:0 72px 20px;z-index:1">
+    ↗ <span>Source:</span> Grand View Research — Global RPA Market Report, 2024–2032
+  </a>
+</div>
+
+<!-- ═══ SLIDE 3 — KEY STATS ═══ -->
+<div class="slide" id="s3">
+  <div class="slide-inner">
+    <div class="tag">💡 Impact Data</div>
+    <h2 class="slide-title">The Business Case for <span class="grad">Intelligent Automation</span></h2>
+    <p class="slide-sub">Verified ROI and efficiency benchmarks from Deloitte, McKinsey, and Forrester research.</p>
+    <div class="grid-4" style="flex:1;align-content:start">
+      <div class="card">
+        <div class="card-icon">⏱️</div>
+        <div class="stat-big grad">80%</div>
+        <div class="card-label">Time Reduction</div>
+        <div class="card-desc">Average reduction in manual processing time for automated workflows</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">💰</div>
+        <div class="stat-big" style="color:var(--accent2)">$1.4T</div>
+        <div class="card-label">Potential Savings</div>
+        <div class="card-desc">Addressable global labor cost savings from full automation potential by 2027</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎯</div>
+        <div class="stat-big" style="color:var(--accent4)">99.5%</div>
+        <div class="card-label">Accuracy Rate</div>
+        <div class="card-desc">Error rate reduction compared to manual data entry in documented RPA deployments</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📅</div>
+        <div class="stat-big" style="color:var(--accent3)">9mo</div>
+        <div class="card-label">Avg. Payback</div>
+        <div class="card-desc">Average payback period for enterprise RPA deployment (Deloitte 2024 Survey)</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🤖</div>
+        <div class="stat-big grad">78%</div>
+        <div class="card-label">Adopting Agentic AI</div>
+        <div class="card-desc">Of Fortune 500 companies piloting or deploying agentic AI workflows in 2025</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <div class="stat-big" style="color:var(--accent2)">3.5×</div>
+        <div class="card-label">ROI Multiplier</div>
+        <div class="card-desc">Average ROI delivered in first 12 months of intelligent automation programs</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">👥</div>
+        <div class="stat-big" style="color:var(--accent4)">72%</div>
+        <div class="card-label">Workforce Shift</div>
+        <div class="card-desc">Of automated-role workers redeployed to higher-value tasks vs. displaced</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌍</div>
+        <div class="stat-big" style="color:var(--accent3)">63%</div>
+        <div class="card-label">Global Adoption</div>
+        <div class="card-desc">Of large enterprises (>1,000 employees) running at least one RPA program</div>
+      </div>
+    </div>
+  </div>
+  <a href="https://www2.deloitte.com/global/en/pages/technology/articles/deloitte-global-rpa-survey.html" target="_blank" class="source-link" style="padding:0 72px 20px;z-index:1">
+    ↗ <span>Sources:</span> Deloitte Global RPA Survey 2024 · McKinsey Global Institute · Forrester Wave 2025
+  </a>
+</div>
+
+<!-- ═══ SLIDE 4 — USE CASE PIE ═══ -->
+<div class="slide" id="s4">
+  <div class="slide-inner">
+    <div class="tag">🥧 Use Case Breakdown</div>
+    <h2 class="slide-title">Where Enterprises Are <span class="grad">Deploying Automation</span></h2>
+    <p class="slide-sub">Distribution of automation investment by business function — based on Gartner 2024 enterprise survey.</p>
+    <div class="pie-layout">
+      <svg class="pie-svg" width="280" height="280" viewBox="0 0 280 280">
+        <defs>
+          <filter id="shadow"><feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="rgba(0,0,0,.5)"/></filter>
+        </defs>
+        <!-- Finance/Accounting 31% -->
+        <path d="M140,140 L140,20 A120,120 0 0,1 254,93 Z" fill="#6C63FF" filter="url(#shadow)"/>
+        <!-- HR 22% -->
+        <path d="M140,140 L254,93 A120,120 0 0,1 246,210 Z" fill="#00D4AA" filter="url(#shadow)"/>
+        <!-- Supply Chain 18% -->
+        <path d="M140,140 L246,210 A120,120 0 0,1 140,260 Z" fill="#FFB020" filter="url(#shadow)"/>
+        <!-- Customer Service 15% -->
+        <path d="M140,140 L140,260 A120,120 0 0,1 34,210 Z" fill="#FF6B6B" filter="url(#shadow)"/>
+        <!-- IT Ops 14% -->
+        <path d="M140,140 L34,210 A120,120 0 0,1 140,20 Z" fill="#8B5CF6" filter="url(#shadow)"/>
+        <circle cx="140" cy="140" r="60" fill="#07090F"/>
+        <text x="140" y="133" text-anchor="middle" fill="#F0F2FF" font-size="22" font-weight="800" font-family="Inter">5</text>
+        <text x="140" y="154" text-anchor="middle" fill="#7B8094" font-size="11" font-weight="600" font-family="Inter">SECTORS</text>
+      </svg>
+      <div class="pie-legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#6C63FF"></div>
+          <div class="legend-label">Finance &amp; Accounting</div>
+          <div class="legend-pct">31%</div>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#00D4AA"></div>
+          <div class="legend-label">Human Resources</div>
+          <div class="legend-pct">22%</div>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#FFB020"></div>
+          <div class="legend-label">Supply Chain &amp; Logistics</div>
+          <div class="legend-pct">18%</div>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#FF6B6B"></div>
+          <div class="legend-label">Customer Service</div>
+          <div class="legend-pct">15%</div>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#8B5CF6"></div>
+          <div class="legend-label">IT Operations</div>
+          <div class="legend-pct">14%</div>
+        </div>
+        <div style="margin-top:16px;padding:16px;background:var(--surface2);border-radius:12px;border:1px solid var(--border)">
+          <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;font-weight:700">Key Insight</div>
+          <div style="font-size:.82rem;line-height:1.6">Finance automation delivers the highest ROI — avg. <span style="color:var(--accent2);font-weight:700">$3.80 return</span> per $1 invested in RPA tooling.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <a href="https://www.gartner.com/en/documents/4021404" target="_blank" class="source-link" style="padding:0 72px 20px;z-index:1">
+    ↗ <span>Source:</span> Gartner — Market Guide for RPA 2024 · Enterprise Automation Survey
+  </a>
+</div>
+
+<!-- ═══ SLIDE 5 — TOOLS ═══ -->
+<div class="slide" id="s5">
+  <div class="slide-inner">
+    <div class="tag">🛠 Tool Landscape</div>
+    <h2 class="slide-title">The <span class="grad">2025 Automation Stack</span> — Ranked by Adoption</h2>
+    <p class="slide-sub">Enterprise adoption rates from Forrester Wave Q1 2025 and G2 category data.</p>
+    <div class="grid-4" style="flex:1;align-content:start">
+      <div class="tool-card">
+        <div class="tool-cat">RPA Platform</div>
+        <div class="tool-name">UiPath</div>
+        <div style="font-size:.75rem;color:var(--muted)">39% enterprise market share</div>
+        <div class="tool-bar-bg"><div class="tool-bar-fg" style="width:78%;background:linear-gradient(90deg,#6C63FF,#8B5CF6)"></div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-cat">RPA Platform</div>
+        <div class="tool-name">Power Automate</div>
+        <div style="font-size:.75rem;color:var(--muted)">31% enterprise market share</div>
+        <div class="tool-bar-bg"><div class="tool-bar-fg" style="width:62%;background:linear-gradient(90deg,#0078D4,#6C63FF)"></div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-cat">RPA Platform</div>
+        <div class="tool-name">Automation Anywhere</div>
+        <div style="font-size:.75rem;color:var(--muted)">21% enterprise market share</div>
+        <div class="tool-bar-bg"><div class="tool-bar-fg" style="width:44%;background:linear-gradient(90deg,#FF6B6B,#FFB020)"></div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-cat">AI Orchestration</div>
+        <div class="tool-name">LangChain</div>
+        <div style="font-size:.75rem;color:var(--muted)">68% of agentic AI projects</div>
+        <div class="tool-bar-bg"><div class="tool-bar-fg" style="width:68%;background:linear-gradient(90deg,#00D4AA,#6C63FF)"></div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-cat">AI Orchestration</div>
+        <div class="tool-name">AutoGen / LangGraph</div>
+        <div style="font-size:.75rem;color:var(--muted)">Multi-agent specialist</div>
+        <div class="tool-bar-bg"><div class="tool-bar-fg" style="width:55%;background:linear-gradient(90deg,#00D4AA,#8B5CF6)"></div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-cat">Vector DB / RAG</div>
+        <div class="tool-name">Pinecone</div>
+        <div style="font-size:.75rem;color:var(--muted)">Leading managed vector DB</div>
+        <div class="tool-bar-bg"><div class="tool-bar-fg" style="width:60%;background:linear-gradient(90deg,#FFB020,#FF6B6B)"></div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-cat">Integration / iPaaS</div>
+        <div class="tool-name">n8n / Make</div>
+        <div style="font-size:.75rem;color:var(--muted)">Fast-growing open source</div>
+        <div class="tool-bar-bg"><div class="tool-bar-fg" style="width:48%;background:linear-gradient(90deg,#8B5CF6,#00D4AA)"></div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-cat">Foundation Models</div>
+        <div class="tool-name">GPT-4o / Claude 3</div>
+        <div style="font-size:.75rem;color:var(--muted)">Top LLMs in enterprise AI</div>
+        <div class="tool-bar-bg"><div class="tool-bar-fg" style="width:72%;background:linear-gradient(90deg,#6C63FF,#00D4AA)"></div></div>
+      </div>
+    </div>
+  </div>
+  <a href="https://www.forrester.com/report/the-forrester-wave-robotic-process-automation/RES176708" target="_blank" class="source-link" style="padding:0 72px 20px;z-index:1">
+    ↗ <span>Source:</span> Forrester Wave™: RPA Q1 2025 · G2 Market Reports · GitHub Stars Analytics
+  </a>
+</div>
+
+<!-- ═══ SLIDE 6 — ROI TABLE ═══ -->
+<div class="slide" id="s6">
+  <div class="slide-inner">
+    <div class="tag">💼 ROI Benchmarks</div>
+    <h2 class="slide-title">Automation ROI by <span class="grad">Industry &amp; Use Case</span></h2>
+    <p class="slide-sub">Verified cost-benefit data from Deloitte's 2024 Intelligent Automation Enterprise Survey (n = 2,400 executives).</p>
+    <div style="flex:1;overflow:auto">
+      <table class="roi-table">
+        <thead>
+          <tr>
+            <th>Industry</th>
+            <th>Use Case</th>
+            <th>FTE Saved</th>
+            <th>Accuracy Gain</th>
+            <th>Payback Period</th>
+            <th>Avg. Annual ROI</th>
+            <th>Maturity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Banking &amp; Finance</strong></td>
+            <td>Invoice &amp; reconciliation</td>
+            <td>12–18 FTE</td>
+            <td>+42%</td>
+            <td>6–9 months</td>
+            <td style="color:var(--accent2);font-weight:700">380%</td>
+            <td><span class="badge badge-green">High</span></td>
+          </tr>
+          <tr>
+            <td><strong>Healthcare</strong></td>
+            <td>Patient data &amp; billing</td>
+            <td>8–12 FTE</td>
+            <td>+38%</td>
+            <td>9–12 months</td>
+            <td style="color:var(--accent2);font-weight:700">290%</td>
+            <td><span class="badge badge-green">High</span></td>
+          </tr>
+          <tr>
+            <td><strong>Manufacturing</strong></td>
+            <td>Supply chain &amp; QA</td>
+            <td>6–10 FTE</td>
+            <td>+29%</td>
+            <td>10–14 months</td>
+            <td style="color:var(--accent4);font-weight:700">240%</td>
+            <td><span class="badge badge-yellow">Growing</span></td>
+          </tr>
+          <tr>
+            <td><strong>Retail &amp; eComm</strong></td>
+            <td>Order &amp; returns mgmt</td>
+            <td>10–15 FTE</td>
+            <td>+35%</td>
+            <td>7–10 months</td>
+            <td style="color:var(--accent2);font-weight:700">320%</td>
+            <td><span class="badge badge-green">High</span></td>
+          </tr>
+          <tr>
+            <td><strong>Insurance</strong></td>
+            <td>Claims processing</td>
+            <td>14–20 FTE</td>
+            <td>+45%</td>
+            <td>5–8 months</td>
+            <td style="color:var(--accent2);font-weight:700">410%</td>
+            <td><span class="badge badge-green">High</span></td>
+          </tr>
+          <tr>
+            <td><strong>Government</strong></td>
+            <td>Document automation</td>
+            <td>5–8 FTE</td>
+            <td>+22%</td>
+            <td>14–20 months</td>
+            <td style="color:var(--accent);font-weight:700">160%</td>
+            <td><span class="badge badge-purple">Emerging</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <a href="https://www2.deloitte.com/global/en/pages/technology/articles/deloitte-global-rpa-survey.html" target="_blank" class="source-link" style="padding:0 72px 20px;z-index:1">
+    ↗ <span>Source:</span> Deloitte — Global Intelligent Automation Survey 2024 (n=2,400 executives)
+  </a>
+</div>
+
+<!-- ═══ SLIDE 7 — ROADMAP ═══ -->
+<div class="slide" id="s7">
+  <div class="slide-inner">
+    <div class="tag">🗺 Evolution Roadmap</div>
+    <h2 class="slide-title">The Journey: RPA → <span class="grad">Autonomous AI Agents</span></h2>
+    <p class="slide-sub">How process automation has evolved — and where it is heading by 2027.</p>
+    <div class="grid-2" style="flex:1;gap:40px">
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot" style="background:rgba(108,99,255,.15);color:#6C63FF">📋</div><div class="tl-line"></div></div>
+          <div class="tl-content"><div class="tl-year">2015–2019</div><div class="tl-title">RPA 1.0 — Rule-Based Bots</div><div class="tl-desc">Screen-scraping, macro replay, structured data only. UiPath and Blue Prism lead. 95% accuracy on stable UIs.</div></div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot" style="background:rgba(0,212,170,.15);color:#00D4AA">🧩</div><div class="tl-line"></div></div>
+          <div class="tl-content"><div class="tl-year">2020–2022</div><div class="tl-title">Intelligent Automation</div><div class="tl-desc">OCR + NLP added to RPA. Semi-structured documents processed. First ML-assisted decision routing introduced.</div></div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot" style="background:rgba(255,176,32,.15);color:#FFB020">🤖</div><div class="tl-line"></div></div>
+          <div class="tl-content"><div class="tl-year">2023–2024</div><div class="tl-title">LLM-Augmented RPA</div><div class="tl-desc">GPT-4 and Claude integrated into workflows. RAG systems enable bots to reason over private knowledge bases.</div></div>
+        </div>
+      </div>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot" style="background:rgba(255,107,107,.15);color:#FF6B6B">⚡</div><div class="tl-line"></div></div>
+          <div class="tl-content"><div class="tl-year">2025 (Now)</div><div class="tl-title">Agentic AI Workflows</div><div class="tl-desc">Multi-agent systems with memory, tool-use, and self-correction. LangGraph, AutoGen, and CrewAI orchestrate complex multi-step processes end-to-end.</div></div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot" style="background:rgba(139,92,246,.15);color:#8B5CF6">🧠</div><div class="tl-line"></div></div>
+          <div class="tl-content"><div class="tl-year">2026–2027 (Emerging)</div><div class="tl-title">Fully Autonomous Enterprise AI</div><div class="tl-desc">AI agents that discover, design, deploy and monitor their own automation pipelines with minimal human oversight.</div></div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot" style="background:rgba(0,212,170,.1);color:#00D4AA">🌐</div></div>
+          <div class="tl-content"><div class="tl-year">2028+ (Vision)</div><div class="tl-title">AI-Native Organizations</div><div class="tl-desc">Every business process either automated or AI-assisted by default. Human role shifts to strategy, ethics, and oversight.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <a href="https://www.mckinsey.com/capabilities/mckinsey-digital/our-insights/the-age-of-ai" target="_blank" class="source-link" style="padding:0 72px 20px;z-index:1">
+    ↗ <span>Source:</span> McKinsey — The Age of AI · Gartner Hype Cycle for AI 2024 · Forrester Predictions 2025
+  </a>
+</div>
+
+<!-- ═══ SLIDE 8 — CLOSING ═══ -->
+<div class="slide" id="s8">
+  <div class="bg-glow"></div>
+  <div class="slide-inner" style="padding-bottom:52px">
+    <div class="closing-center">
+      <div class="closing-icon">🚀</div>
+      <h2 class="closing-title">Ready to Build<br/><span class="grad">Your Automation Future</span></h2>
+      <p class="closing-sub">The data is clear: intelligent automation is no longer optional. The question is how fast you move. Let's architect the system that gives you the edge.</p>
+      <div class="closing-links">
+        <a href="mailto:hello@yourportfolio.dev" class="closing-btn btn-filled">✉️ Get In Touch</a>
+        <a href="#" class="closing-btn btn-outline">📄 Download Report</a>
+      </div>
+      <div style="margin-top:48px;display:flex;gap:32px;flex-wrap:wrap;justify-content:center">
+        <a href="https://www.grandviewresearch.com/industry-analysis/robotic-process-automation-rpa-market" target="_blank" style="font-size:.72rem;color:var(--muted);text-decoration:none;font-family:var(--mono);transition:color .2s" onmouseover="this.style.color='#00D4AA'" onmouseout="this.style.color='#7B8094'">↗ Grand View Research</a>
+        <a href="https://www2.deloitte.com/global/en/pages/technology/articles/deloitte-global-rpa-survey.html" target="_blank" style="font-size:.72rem;color:var(--muted);text-decoration:none;font-family:var(--mono);transition:color .2s" onmouseover="this.style.color='#00D4AA'" onmouseout="this.style.color='#7B8094'">↗ Deloitte RPA Survey</a>
+        <a href="https://www.gartner.com/en/documents/4021404" target="_blank" style="font-size:.72rem;color:var(--muted);text-decoration:none;font-family:var(--mono);transition:color .2s" onmouseover="this.style.color='#00D4AA'" onmouseout="this.style.color='#7B8094'">↗ Gartner Market Guide</a>
+        <a href="https://www.forrester.com/report/the-forrester-wave-robotic-process-automation/RES176708" target="_blank" style="font-size:.72rem;color:var(--muted);text-decoration:none;font-family:var(--mono);transition:color .2s" onmouseover="this.style.color='#00D4AA'" onmouseout="this.style.color='#7B8094'">↗ Forrester Wave</a>
+        <a href="https://www.mckinsey.com/capabilities/mckinsey-digital/our-insights/the-age-of-ai" target="_blank" style="font-size:.72rem;color:var(--muted);text-decoration:none;font-family:var(--mono);transition:color .2s" onmouseover="this.style.color='#00D4AA'" onmouseout="this.style.color='#7B8094'">↗ McKinsey Age of AI</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let current = 0;
+
+function goTo(n) {
+  slides[current].classList.remove('active');
+  current = Math.max(0, Math.min(n, total - 1));
+  slides[current].classList.add('active');
+  document.getElementById('counter').textContent = `${current + 1} / ${total}`;
+  document.getElementById('progress').style.width = `${((current + 1) / total) * 100}%`;
+}
+
+document.getElementById('btn-next').addEventListener('click', () => goTo(current + 1));
+document.getElementById('btn-prev').addEventListener('click', () => goTo(current - 1));
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                    { e.preventDefault(); goTo(current - 1); }
+  if (e.key === 'Home') goTo(0);
+  if (e.key === 'End')  goTo(total - 1);
+});
+
+// Touch swipe
+let tx = 0;
+document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; });
+document.addEventListener('touchend',   e => {
+  const dx = tx - e.changedTouches[0].clientX;
+  if (Math.abs(dx) > 50) dx > 0 ? goTo(current + 1) : goTo(current - 1);
+});
+
+goTo(0);
+</script>
+</body>
+</html>
